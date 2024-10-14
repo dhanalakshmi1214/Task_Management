@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MANAGER
+  ADMIN
+  DEVELOPER
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+}
+
+model User {
+  user_id      Int            @id @default(autoincrement())
+  username     String
+  email        String         @unique
+  password     String
+  role         Role
+  TaskCreated  TaskAssigned[] @relation("TaskCreated")
+  TaskAssigned TaskAssigned[] @relation("TaskAssigned")
+
+  task          Task[]
+  notifications Notification[]
+}
+
+model Task {
+  task_id     Int            @id @default(autoincrement())
+  title       String
+  description String
+  due_date    Int
+  assignment  TaskAssigned[]
+  userId      Int
+  user        User           @relation(fields: [userId], references: [user_id])
+}
+
+model TaskAssigned {
+  taskAssigned_id Int        @id @default(autoincrement())
+  createdById     Int
+  createdBy       User       @relation("TaskCreated", fields: [createdById], references: [user_id])
+  assignedToId    Int
+  assignedTo      User       @relation("TaskAssigned", fields: [assignedToId], references: [user_id])
+  status          TaskStatus
+
+ taskId          Int
+ task            Task    @relation(fields: [taskId], references: [task_id])
+}
+
+model Notification {
+  notification_id Int      @id @default(autoincrement())
+  message         String
+  isRead          Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [user_id])
+}
